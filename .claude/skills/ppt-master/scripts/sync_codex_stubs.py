@@ -141,9 +141,8 @@ def build_stubs(dst: Path) -> None:
     for name in _skill_names():
         out = dst / name / "SKILL.md"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(_render_stub(name), encoding="utf-8", newline="\n")
-    (dst / "_GENERATED.md").write_text(GENERATED_MARKER, encoding="utf-8",
-                                       newline="\n")
+        out.write_bytes(_render_stub(name).encode("utf-8"))
+    (dst / "_GENERATED.md").write_bytes(GENERATED_MARKER.encode("utf-8"))
 
 
 def _normalized(path: Path) -> bytes:

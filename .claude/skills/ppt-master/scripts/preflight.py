@@ -49,6 +49,9 @@ OPTIONAL_MODULES = (
     ("playwright", "playwright", "Step 6 selective pixel check and visual-review "
      "rendering are skipped (static geometry gate still runs)"),
 )
+# Declared runtime floor (README.md "Python 3.10+"). Below it, scripts fail on
+# version-gated stdlib arguments rather than on anything this gate reports.
+MIN_PYTHON = (3, 10)
 FONT_FAMILY = "Pretendard"
 # Per-directory guard against a pathological scan. Hitting it means "unknown",
 # never "not installed" — see font_installed().
@@ -137,6 +140,34 @@ def check_fonts() -> list[str]:
     ]
 
 
+def _newer_python_on_path() -> Optional[str]:
+    """Absolute path of the lowest `pythonX.Y` on PATH at or above MIN_PYTHON."""
+    major, minor = MIN_PYTHON
+    for candidate in range(minor, minor + 12):
+        found = shutil.which(f"python{major}.{candidate}")
+        if found:
+            return found
+    return None
+
+
+def check_python_version() -> list[str]:
+    if sys.version_info >= MIN_PYTHON:
+        return []
+    running = ".".join(str(part) for part in sys.version_info[:3])
+    required = ".".join(str(part) for part in MIN_PYTHON)
+    newer = _newer_python_on_path()
+    if newer:
+        hint = (f"{newer} is already on PATH — rerun with it, or repoint the "
+                f"`python3` this shell resolves ({sys.executable})")
+    elif sys.platform == "darwin":
+        hint = f"install it: brew install python@{required}"
+    elif sys.platform == "win32":
+        hint = "install it from python.org and re-open the terminal"
+    else:
+        hint = f"install python{required} through the system package manager"
+    return [f"Python {required}+ required, running {running} — {hint}"]
+
+
 def check_image_backend() -> list[str]:
     if shutil.which("codex"):
         return []
@@ -191,10 +222,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    failures = check_core_deps() + check_codex_stubs()
-    warnings = check_optional_deps() + check_fonts() + check_officecli()
-    if args.needs_images:
-        warnings += check_image_backend()
+    # Version first, then stop: the remaining checks assume the declared
+    # runtime, and some raise inside the stdlib below it — a traceback there
+    # hides the one problem the user has to fix.
+    failures = check_python_version()
+    warnings: list[str] = []
+    if not failures:
+        failures = check_core_deps() + check_codex_stubs()
+        warnings = check_optional_deps() + check_fonts() + check_officecli()
+        if args.needs_images:
+            warnings += check_image_backend()
 
     for w in warnings:
         print(f"  ! WARN {w}", file=sys.stderr)

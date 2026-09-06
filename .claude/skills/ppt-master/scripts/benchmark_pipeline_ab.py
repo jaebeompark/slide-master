@@ -711,7 +711,7 @@ def summarize_case(
 
 def _write_report(path: Path, report: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    path.write_bytes((json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def build_parser() -> argparse.ArgumentParser:
