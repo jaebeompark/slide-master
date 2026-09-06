@@ -247,11 +247,12 @@ def officecli_checks(project: Path, render: bool = True) -> tuple[list[str], lis
     if not failures:
         out = project / "_pptx_render" / f"{pptx.stem}-grid.png"
         out.parent.mkdir(parents=True, exist_ok=True)
-        # officecli's --screenshot-height defaults to 1200, which silently
-        # truncates a multi-row contact sheet: the lost tiles look like a
-        # shorter deck rather than a failed render. --grid auto aims for a
-        # roughly square sheet, so derive the row count the same way and give
-        # each row enough viewport to land whole.
+        # officecli's screenshot viewport defaults to 1600x1200, which
+        # silently truncates a multi-row contact sheet: the lost tiles look
+        # like a shorter deck rather than a failed render. --grid auto also
+        # picks its column count to keep the sheet roughly square, so setting
+        # only the height makes it choose a narrow, tall layout that then
+        # clips horizontally. Size BOTH axes from the intended grid.
         try:
             with zipfile.ZipFile(pptx) as _z:
                 slide_count = sum(
@@ -261,9 +262,12 @@ def officecli_checks(project: Path, render: bool = True) -> tuple[list[str], lis
             slide_count = 0
         cols = max(1, math.ceil(math.sqrt(slide_count))) if slide_count else 1
         rows = max(1, math.ceil(slide_count / cols)) if slide_count else 1
-        sheet_height = max(1200, rows * 700 + 100)
+        # One 16:9 tile per slide at 640x360, plus gutters.
+        sheet_width = max(1600, cols * 640 + 160)
+        sheet_height = max(1200, rows * 360 + 120)
         rs = _run_officecli([binary, "view", str(pptx), "screenshot",
                              "--grid", "auto", "--out", str(out),
+                             "--screenshot-width", str(sheet_width),
                              "--screenshot-height", str(sheet_height),
                              "--json"],
                             timeout=180)

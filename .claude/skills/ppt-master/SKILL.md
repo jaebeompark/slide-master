@@ -875,7 +875,13 @@ python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 > paragraph blocks collapse into one editable PowerPoint text frame with multiple
 > `<a:p>`, improving body-text editing and resize/reflow behavior. Add `--no-merge`
 > only when the user explicitly asks for strict line-layout fidelity or when a
-> layout-tight page must keep every dy-stacked line as its own text frame. The
+> layout-tight page must keep every dy-stacked line as its own text frame.
+> **Detection**: after the first export, compare each paragraph's estimated text
+> width against its frame `<a:ext cx>`; any paragraph wider than its frame will be
+> re-wrapped by PowerPoint at a point you did not choose — mid-word in CJK, which
+> has no spaces to break on. A deck whose line breaks were computed to fit columns
+> re-exports with `--no-merge`. `svg_quality_checker.py` passes such a deck: the
+> SVG is correct and the defect appears only after conversion. The
 > merge detector is conservative: adjacent lines with different effective font
 > sizes retain a paragraph break, and mixed-layout text falls back to per-line frames.
 > A multiline

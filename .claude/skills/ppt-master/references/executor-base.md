@@ -97,6 +97,16 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 **Per-block expression**: render each `design_spec.md §IX Content` block in its written texture — a full-sentence block as wrapped prose, a fragment/label block as bullets/keywords. **Never split a full-sentence block into a bullet list** — splitting loses the information that the block was continuous reasoning, not a set of parallel points; not because a bullet lays out easier, and not because an inherited template slot is shaped as a list. If a block carries no clear texture, infer the mode from its wording and the page layout.
 
 - **Prose render recipe**: one `<text>` per paragraph; wrap lines with sibling `<tspan>` where the first line uses `dy="0"` and every subsequent line repeats the parent `<text>`'s **exact `x`** and the **same positive relative `dy`** (the line-height). Equal relative `dy` + matching `x` + the same effective `font-size` lets lines flow inside one PowerPoint paragraph; a font-size change preserves a new paragraph inside the same text frame, while a growing/cumulative `dy`, an irregular gap, or a mismatched `x` (e.g. `x="0"` under `<text x="60">`) may split them into separate single-line boxes. Set the line-height `dy` from the font size × a line-height factor. **Default — line-height by density (may override per content fit)**: ~1.4–1.5× for dense / small-body blocks (CLReq comfortable minimum), 1.6–2.0× for large-type, sparse, or `breathing` blocks. Fit about width ÷ font-size CJK glyphs per line (Latin fits roughly twice that); the last line runs short. Use the body ramp size, not a new one.
+
+> **Note — an authored break is not a reflowable one.** The flow-in-one-paragraph
+> behavior above is what you want for prose the reader may edit. It is a defect for a
+> break you computed to fit a column: the merged paragraph carries both lines' text but
+> the exported frame is sized to the widest single line, so PowerPoint re-wraps it — and
+> CJK has no spaces to break on, so it splits mid-word. When a page's breaks were chosen
+> by width arithmetic rather than left to reflow, export that deck with `--no-merge`
+> ([SKILL.md](../SKILL.md) Step 7.3) or author each line as its own `<text>`. Audit for it
+> by comparing each exported paragraph's estimated width against its frame `<a:ext cx>`;
+> `svg_quality_checker.py` cannot see this because the SVG itself is correct.
 - **Template precedence**: when an inherited template slot is a bullet list but the §IX block is prose, the prose wins — widen or reflow the container to hold the paragraph, or drop that card; do not pour the sentence back into the list slot.
 - **Mode precedence**: the locked mode shapes voice / register, not §IX's authored titles or page order. When a `§IX` title is a user-authored topic label, keep it — do not upgrade it to an assertion just because the mode (e.g. `pyramid`) favors them; mode title-tendencies apply only to AI-drafted titles.
 
