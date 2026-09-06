@@ -55,6 +55,13 @@ STRUCTURED_SECTIONS = ("pptx_masters", "pptx_layouts", "page_layouts")
 SLIDE_HEADING_RE = re.compile(r"^####\s+Slide\s+(\d+)", re.MULTILINE)
 SECTION_RE = re.compile(r"^##\s+([A-Za-z_]+)\s*$", re.MULTILINE)
 HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+# spec_lock_reference.md puts the deck-wide AI-image rendering/palette in the
+# `colors` section. They are catalog names or prose, not paint, so they are
+# neither hex-checkable nor part of the locked neutral set.
+NON_COLOR_ROLES = frozenset({
+    "image_rendering", "image_palette",
+    "image_rendering_behavior", "image_palette_behavior",
+})
 # Pages that legitimately carry no Core message line
 EXEMPT_TITLE_RE = re.compile(
     r"chapter|章|agenda|目录|목차|divider|section|part\b|cover|closing|ending"
@@ -216,7 +223,8 @@ def check_spec_lock(sections: dict[str, dict[str, str]], page_count: int,
     if not sections["visual_style"].get("visual_style"):
         errors.append("spec_lock.md visual_style has no `visual_style` value")
 
-    colors = sections["colors"]
+    colors = {role: value for role, value in sections["colors"].items()
+              if role not in NON_COLOR_ROLES}
     if len(colors) < 6:
         errors.append(f"spec_lock.md colors has only {len(colors)} entries — "
                       f"the full neutral set must be locked before generation")
@@ -266,7 +274,12 @@ def check_spec_lock(sections: dict[str, dict[str, str]], page_count: int,
                               f"{page_count} §IX pages exactly (one row per page)")
 
     page_charts = sections.get("page_charts", {})
-    vii_by_page = {r["page"]: r["template"].strip("`") for r in vii_rows}
+    # A page may carry several §VII rows — a primary chart plus a supporting
+    # one, or a chart plus a `no-template-match` fallback. Keeping only the
+    # last one made every such page disagree with its own page_charts entry.
+    vii_by_page: dict[str, list[str]] = {}
+    for r in vii_rows:
+        vii_by_page.setdefault(r["page"], []).append(r["template"].strip("`"))
     for page, chart in page_charts.items():
         if page_count and page not in expected_pages:
             errors.append(f"spec_lock.md page_charts `{page}` is outside the "
@@ -275,15 +288,20 @@ def check_spec_lock(sections: dict[str, dict[str, str]], page_count: int,
             errors.append(f"spec_lock.md page_charts `{page}: {chart}` not found "
                           f"in charts_index.json — Executor would look for a "
                           f"non-existent reference")
-        if vii_by_page and page in vii_by_page and vii_by_page[page] != chart:
-            warnings.append(f"page_charts `{page}: {chart}` disagrees with §VII "
-                            f"(`{vii_by_page[page]}`)")
-    for page, template in vii_by_page.items():
-        if template in charts and page not in page_charts:
-            warnings.append(f"§VII lists catalog template `{template}` for "
-                            f"{page} but spec_lock.md page_charts has no "
-                            f"`{page}` row — add the row, or mark the page "
-                            f"`no-template-match` in §VII")
+        if vii_by_page and page in vii_by_page and chart not in vii_by_page[page]:
+            listed = ", ".join(f"`{t}`" for t in vii_by_page[page])
+            warnings.append(f"page_charts `{page}: {chart}` is not among the "
+                            f"§VII templates for that page ({listed})")
+    for page, templates in vii_by_page.items():
+        if page in page_charts:
+            continue
+        for template in templates:
+            if template in charts:
+                warnings.append(f"§VII lists catalog template `{template}` for "
+                                f"{page} but spec_lock.md page_charts has no "
+                                f"`{page}` row — add the row, or mark the page "
+                                f"`no-template-match` in §VII")
+                break
     return errors, warnings
 
 

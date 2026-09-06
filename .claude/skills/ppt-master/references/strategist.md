@@ -415,16 +415,16 @@ The most common Strategist failure mode is missing the structural half — treat
 >
 > | Page | Template      | Path                              | Summary-quote (verbatim) | Usage |
 > | ---- | ------------- | --------------------------------- | ------------------------ | ----- |
-> | P03  | column_chart     | templates/charts/column_chart.svg    | "<verbatim first sentence>" | <intent> |
-> | P07  | line_chart    | templates/charts/line_chart.svg   | "<verbatim first sentence>" | <intent> |
-> | P11  | pie_chart     | templates/charts/pie_chart.svg    | "<verbatim first sentence>" | <intent> |
+> | P03  | column_chart     | templates/charts/column_chart.svg    | "<the complete summary, verbatim>" | <intent> |
+> | P07  | line_chart    | templates/charts/line_chart.svg   | "<the complete summary, verbatim>" | <intent> |
+> | P11  | pie_chart     | templates/charts/pie_chart.svg    | "<the complete summary, verbatim>" | <intent> |
 >
 > Runners-up considered (only genuinely close second-best calls; at least 1 when any viz page exists):
 > - <key_A> | rejected for P03: <reason citing this deck's specifics>
 > - <key_B> | rejected for P07: <reason>
 > - <key_C> | rejected for P11: <reason>
 > ```
-> The `summary-quote` must be copy-pasted from `charts_index.json` — paraphrasing or summarizing breaks the audit. Every template name listed (selected or rejected) must `grep` cleanly inside `charts_index.json` (so misspelled or invented keys fail). List only runner-up calls that were genuinely close — a page whose match was unambiguous needs no runner-up line.
+> The `summary-quote` must be copy-pasted from `charts_index.json` — the **entire** `summary` string, both the Pick and the Skip sentence. `validate_spec.py` compares it for exact equality, so a first-sentence excerpt or any paraphrase fails the gate. Every template name listed (selected or rejected) must `grep` cleanly inside `charts_index.json` (so misspelled or invented keys fail). List only runner-up calls that were genuinely close — a page whose match was unambiguous needs no runner-up line.
 >
 > **Fallback when no template fits**:
 > 1. Re-read the full summary list with the page's intent re-stated in plain language — "non-obvious" matches often surface on the second pass (e.g. "causal chain" → `process_flow` or `sankey_chart`).
