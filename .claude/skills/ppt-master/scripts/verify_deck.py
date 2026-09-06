@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
@@ -246,8 +247,25 @@ def officecli_checks(project: Path, render: bool = True) -> tuple[list[str], lis
     if not failures:
         out = project / "_pptx_render" / f"{pptx.stem}-grid.png"
         out.parent.mkdir(parents=True, exist_ok=True)
+        # officecli's --screenshot-height defaults to 1200, which silently
+        # truncates a multi-row contact sheet: the lost tiles look like a
+        # shorter deck rather than a failed render. --grid auto aims for a
+        # roughly square sheet, so derive the row count the same way and give
+        # each row enough viewport to land whole.
+        try:
+            with zipfile.ZipFile(pptx) as _z:
+                slide_count = sum(
+                    1 for n in _z.namelist()
+                    if re.fullmatch(r"ppt/slides/slide\d+\.xml", n))
+        except Exception:
+            slide_count = 0
+        cols = max(1, math.ceil(math.sqrt(slide_count))) if slide_count else 1
+        rows = max(1, math.ceil(slide_count / cols)) if slide_count else 1
+        sheet_height = max(1200, rows * 700 + 100)
         rs = _run_officecli([binary, "view", str(pptx), "screenshot",
-                             "--grid", "auto", "--out", str(out), "--json"],
+                             "--grid", "auto", "--out", str(out),
+                             "--screenshot-height", str(sheet_height),
+                             "--json"],
                             timeout=180)
         if rs is not None and rs.returncode == 0 and out.exists():
             print(f"[verify_deck] pptx render: {out} — Read it to eyeball "
