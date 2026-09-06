@@ -8,6 +8,8 @@ description: Verify chart coordinates against the design spec using svg_position
 
 This workflow is **independent**: it reads `design_spec.md` and the generated SVGs, then runs the calculator script — no upstream conversation context required. Safe to invoke in a fresh session.
 
+**Default — run this workflow in a subagent.** Independence is exactly the delegation precondition: dispatch one delegate with the absolute `<project_path>` and this file inlined, have it write `<project_path>/analysis/delegates/chart_verify.md` (per-page mode, calculated vs. authored coordinates, the exact deltas), and act on its report. The delegate reports coordinate diffs; the main agent owns every `svg_output/` edit. Contract: [`subagent-delegation.md`](../references/subagent-delegation.md) §1, §3–§4.
+
 ## When to Run
 
 - The deck contains one or more data visualization charts where source values determine SVG geometry: bar lengths/heights, point positions, arc angles, polygon vertices, connector endpoints, bubble centers/radii, or flow widths/paths.

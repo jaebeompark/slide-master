@@ -75,6 +75,8 @@ If any page comes back with `"all_background": true` in the JSON summary, that p
 
 ## Step 2 — Spawn the review team
 
+Dispatch follows [`subagent-delegation.md`](../references/subagent-delegation.md) §3–§4, with the specialized rules in rubric [§6](../references/visual-review.md#6-dispatch--messaging-contract) winning on every conflict.
+
 Create a team and dispatch one orchestrator agent. The orchestrator partitions the N pages into batches of ≤ K pages (default **K = 5**) and spawns one subagent per batch **in parallel** (single message, `ceil(N/K)` parallel `Agent` calls). Each batch subagent reads the fixed inputs (rubric + `design_spec.md` + `spec_lock.md`) **once**, then iterates over its assigned pages sequentially.
 
 ```text

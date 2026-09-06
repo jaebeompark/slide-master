@@ -31,6 +31,8 @@ Registry for standalone workflows referenced by `SKILL.md` and [`routing.md`](./
 | `generate-audio` | [`generate-audio.md`](./generate-audio.md) | User asks for recorded narration, voiceover, audio, or video-style export | Post-processing/export context exists; notes available | Do not call `notes_to_audio.py` directly | After Step 7 | Audio files and optional narration-embedded PPTX | Single backend/voice/settings confirmation |
 | `verify-pptx-export` | [`verify-pptx-export.md`](./verify-pptx-export.md) | User explicitly asks to verify/QA an exported PPTX file, including approval after a lightweight sanity-scan recommendation | Exported PPTX exists in `<project>/exports/`; OfficeCLI installed | Never auto-run after export or merely because the default contact-sheet scan is suspicious; not a pre-export SVG review | After Step 7.3 or after a direct-PPTX workflow export | Triaged validation/issue/render findings; fixes routed upstream and re-exported | Stops if OfficeCLI is missing or no export exists |
 
+**Delegated workflows**: `topic-research`, `verify-charts`, `verify-pptx-export`, and `visual-review` run in subagents by default — the row above still owns the trigger and blocking points, while [`subagent-delegation.md`](../references/subagent-delegation.md) owns who dispatches, what the delegate receives, and what it returns.
+
 ---
 
 ## 2. Update Checklist
@@ -41,5 +43,6 @@ When adding or changing a standalone workflow:
 2. Update route selection in [`routing.md`](./routing.md).
 3. Add a short pointer in `SKILL.md` only if the workflow is part of the main pipeline's normal control flow.
 4. Keep detailed commands and recovery behavior in the workflow file, not in this registry.
+5. Decide whether the workflow delegates: if it is independent of upstream conversation context, add its row to [`subagent-delegation.md`](../references/subagent-delegation.md) §1.
 
 **Forbidden - duplicated matrices**: Do not copy the full route matrix from [`routing.md`](./routing.md) into `SKILL.md`. Link to the authority instead.

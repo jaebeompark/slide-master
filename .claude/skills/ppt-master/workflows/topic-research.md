@@ -8,6 +8,8 @@ description: Gather source materials via web search when the user supplies only 
 
 This workflow is **independent**: it owns the source-acquisition step when no file exists; subsequent SKILL.md steps proceed normally with the produced materials as input.
 
+**Hard rule — Steps 2 and 3 run in subagents.** Raw search results and fetched pages never enter the main agent's context; only the composed research document does. Full dispatch and return contract: [`subagent-delegation.md`](../references/subagent-delegation.md). Step 1 stays with the main agent — it is ⛔ BLOCKING.
+
 ## When to Run
 
 | User-supplied input | Action |
@@ -35,9 +37,15 @@ This workflow is **independent**: it owns the source-acquisition step when no fi
 
 ---
 
-## Step 2: Gather via web search
+## Step 2: Gather via web search (delegated)
 
-**Tools** — use the web search and web fetch tools the current IDE provides:
+**Default — one research delegate owns Steps 2 and 3 end to end**: it searches, fetches, composes `projects/<topic_slug>.md`, and downloads the retained images. It receives the confirmed Step 1 values (topic, scope, depth, output language, `<topic_slug>`), the absolute repository root, this file's Step 2 and Step 3 rules inlined, and the §2 forbid list. It returns only `status` + artifact paths + a ≤150-word summary.
+
+**Parallel fan-out (confirmed scope names ≥4 distinct facets)**: dispatch one gather delegate per facet in a single message. Each writes `projects/<topic_slug>.research/<facet>.md` — facts, named entities, source URLs, candidate image URLs with license — and nothing else. Then dispatch one composer delegate that reads those notes, writes `projects/<topic_slug>.md` per Step 3, downloads the retained images, and **deletes `projects/<topic_slug>.research/`**. A left-behind notes folder is a workflow violation.
+
+**Forbidden — delegates asking the user anything.** The no-web-tools fallback below is a `needs_user` return; the main agent asks for the URLs and re-dispatches with them inlined.
+
+**Tools** — the delegate uses the web search and web fetch tools the current IDE provides:
 
 | IDE | Web search | Web fetch |
 |---|---|---|
@@ -45,7 +53,7 @@ This workflow is **independent**: it owns the source-acquisition step when no fi
 | Cursor / Codebuddy / VS Code + Copilot | provider-equivalent built-in | provider-equivalent built-in |
 | None available | — | fallback below |
 
-**Fallback when no IDE web tools** — pause, ask the user for 2–4 authoritative URLs (Wikipedia / official site / institutional release), then fetch each:
+**Fallback when no IDE web tools** — return `needs_user`; the main agent asks the user for 2–4 authoritative URLs (Wikipedia / official site / institutional release) and re-dispatches, and the delegate fetches each:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>
@@ -72,9 +80,9 @@ python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>
 
 ---
 
-## Step 3: Save materials
+## Step 3: Save materials (delegated)
 
-Two artifacts under `projects/`:
+Written by the Step 2 delegate (single) or the composer delegate (fan-out). Two artifacts under `projects/`:
 
 | Artifact | Path |
 |---|---|
@@ -111,7 +119,7 @@ curl -L -o "projects/<topic_slug>/<descriptive_name>.<ext>" "<image_url>"
 
 ## Hand-off
 
-Output a checkpoint, then continue with the main pipeline. The artifacts feed directly into Step 2's `import-sources`:
+The main agent reads `projects/<topic_slug>.md` — this is the source material Step 4 needs — and nothing else the delegates touched. Output a checkpoint, then continue with the main pipeline. The artifacts feed directly into Step 2's `import-sources`:
 
 ```markdown
 ## ✅ Topic Research Complete

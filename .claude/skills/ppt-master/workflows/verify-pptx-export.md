@@ -10,6 +10,8 @@ The normal handoff may perform one lightweight exported-PPTX contact-sheet sanit
 
 This workflow is **independent**: it reads `<project>/exports/<file>.pptx` and the route-owned comparison source. For an SVG-pipeline deck, compare against `svg_output/`; generate `svg_final/` on demand only when a self-contained comparison view is useful. No upstream conversation context is required, so the workflow is safe to invoke in a fresh session.
 
+**Default — run this workflow in a subagent** once the user has approved entering it. Dispatch one delegate with the absolute `<project>` path, the exported `.pptx` path, and this file inlined; it runs the OfficeCLI validate / issues / screenshot passes, keeps the rendered slide images inside its own context, and writes `<project>/analysis/delegates/pptx_export_verify.md` (per-check verdict, per-page findings with page numbers, proposed repairs). The main agent owns the approval to enter, every repair, and the re-export. Contract: [`subagent-delegation.md`](../references/subagent-delegation.md) §1, §3–§4.
+
 ## When to Run
 
 - The user explicitly asks to verify / QA / check an exported PPTX.
