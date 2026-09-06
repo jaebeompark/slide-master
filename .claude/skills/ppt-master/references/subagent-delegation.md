@@ -2,9 +2,11 @@
 
 # Subagent Delegation Reference Manual
 
-Delegation contract for the PPT Master main SVG pipeline: which work runs in a spawned subagent instead of the main agent, what each delegate receives, and what it returns.
+Delegation contract for both PPT Master route families: which work runs in a spawned subagent instead of the main agent, what each delegate receives, and what it returns.
 
-**Trigger**: the main agent reads this file once, at the first delegable step of a run. Steps 2 / 3 / 5 / 7 and the `topic-research`, `verify-charts`, `verify-pptx-export`, `visual-review` workflows dispatch their §1 row through §3.
+**Hard rule — mechanics only.** A direct-PPTX route reuses §2–§4 the way it reuses shared scripts. Its own skill still owns every gate, and no §1 row belonging to the other family transfers with them.
+
+**Trigger**: the main agent reads this file once, at the first delegable step of a run. Main-pipeline Steps 2 / 3 / 5 / 7, the `topic-research`, `verify-charts`, `verify-pptx-export`, `visual-review` workflows, and [`ppt-template-fill`](../../ppt-template-fill/SKILL.md) Step 7 dispatch their §1 row through §3.
 
 ---
 
@@ -22,6 +24,9 @@ Delegation contract for the PPT Master main SVG pipeline: which work runs in a s
 | [`verify-charts`](../workflows/verify-charts.md) | The whole workflow — page list, calculator runs, coordinate diff | Approving the SVG edits the report proposes | `<project>/analysis/delegates/chart_verify.md` |
 | [`verify-pptx-export`](../workflows/verify-pptx-export.md) | The whole workflow — OfficeCLI validate / issues / screenshot passes | Entering the workflow at all (explicit user approval), the repair decisions | `<project>/analysis/delegates/pptx_export_verify.md` |
 | [`visual-review`](../workflows/visual-review.md) | Per-page rubric batches | Orchestration and the aggregated brand review | `<project>/.review/<page>.json` (that workflow's own §6 contract wins) |
+| [`ppt-template-fill`](../../ppt-template-fill/SKILL.md) 7.1 | Run `validate`, check the read-back table | Accepting or rejecting the verdict | `<project>/validation/delegates/readback_check.md` |
+| [`ppt-template-fill`](../../ppt-template-fill/SKILL.md) 7.2 | Run `officecli validate` + `issues --json`, triage each finding into fix / pre-existing / package-defect | **Every `fill_plan.json` rewrite** — the delegate measures and never rewrites copy | `<project>/validation/delegates/officecli_triage.md` |
+| [`ppt-template-fill`](../../ppt-template-fill/SKILL.md) 7.3 | Render every page and read the images against the five visual checks | The fix decisions and the re-apply | `<project>/validation/delegates/render_check.md` |
 
 ### 1.1 Parallel groups
 
@@ -29,6 +34,7 @@ Delegation contract for the PPT Master main SVG pipeline: which work runs in a s
 |---|---|
 | `topic-research` subtopics | One delegate per subtopic, all in one message, then one composer delegate |
 | Step 7 verification | `deck-verify` and `chart-verify` in one message when both apply |
+| template-fill 7.1 + 7.2 | One message; 7.3 waits, since a 7.2 rewrite invalidates the render |
 | `visual-review` batches | Per [`visual-review.md`](./visual-review.md) §6.1 |
 
 Everything else is a single delegate. Two delegates MUST NOT write the same file.
@@ -108,6 +114,7 @@ summary: <= 150 words
 | Step 5 acquisition | Any `ai` / `web` / `slice` row needs the ladder, recovery, or slicing | Every row already terminal from the Step 4 background launch |
 | Step 7 verification | `verify_deck.py` is being run, or the contact sheet needs a look | A re-run of a check that already passed unchanged |
 | `topic-research` | Always | Never |
+| template-fill 7.1–7.3 | Always — 7.3 reads one image per page, the largest single cost in that route | Never |
 
 > Note: the Step 4 early background launch (`image_gen.py` / `image_search.py` as background processes) is not delegation and is unchanged. A Step 5 delegate collects those runs' results.
 

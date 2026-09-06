@@ -321,7 +321,13 @@ The script:
 
 Three layers, in order: content read-back → OfficeCLI measurement gate → native render pass. The export is not final until all three pass or every remaining finding is explicitly accepted.
 
+**Default — run all three layers in subagents.** They are measurement, not authoring: each runs a fixed command set against the exported package and returns a verdict. Dispatch and return mechanics: [`subagent-delegation.md`](../ppt-master/references/subagent-delegation.md) §3–§4. Reusing those mechanics does not move any gate — this skill still owns every gate in Step 7.
+
+**Forbidden — delegating Steps 3–6.** Step 3 is not a file to summarize; `slide_library.json` is the layout inventory that Step 4's fitness decision reasons over, and a delegate's digest drops the `slots[].role` counts, `geometry`, and `text_metrics` that decision needs — which is how a plan ends up pouring content into whatever slot is empty. Steps 4–6 are the authoring core and one cheap command each.
+
 ### 7.1 Content read-back
+
+**Delegate**: one subagent runs the command and the verification table below, then writes `<project_dir>/validation/delegates/readback_check.md` (one row per check with the observed value). Dispatch it together with the 7.2 delegate in one message.
 
 ```bash
 python3 .claude/skills/ppt-master/scripts/template_fill_pptx.py validate "<project_dir>"
@@ -345,6 +351,8 @@ Verify:
 ### 7.2 OfficeCLI measurement gate
 
 🚧 **GATE**: This scan is required, not optional. `check-plan` (Step 5) estimates fit; this gate measures the actual rendered frames. Editing stays in `fill_plan.json` + `apply` — OfficeCLI only measures and judges.
+
+**Delegate the measurement, never the rewrite**: a subagent runs both commands, triages every finding into the categories below, and writes `<project_dir>/validation/delegates/officecli_triage.md` with the measured needed-vs-usable heights per finding. It does not touch `fill_plan.json` — shortening a slot's copy is a wording decision that needs the target message, so it stays with the main agent. Each fix round re-dispatches the delegate to re-scan.
 
 ```bash
 officecli validate "<project_dir>/exports/<file>.pptx"
@@ -379,6 +387,8 @@ Save the `issues --json` output to `<project_dir>/validation/officecli_issues.js
 ### 7.3 Native render pass
 
 Render every output page and read the images (with PowerPoint installed, default `--render auto` drives native PowerPoint — ground truth):
+
+**Delegate**: this layer reads one image per page and is the largest single context cost in this route. One subagent renders, reads every page against the five checks below, and writes `<project_dir>/validation/delegates/render_check.md` naming each defect by page number and slot. Dispatch it only after 7.2 is clean or its findings are accepted — a 7.2 rewrite invalidates the render.
 
 ```bash
 officecli view "<project_dir>/exports/<file>.pptx" screenshot --page 1-<N> \
