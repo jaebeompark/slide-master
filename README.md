@@ -69,6 +69,85 @@ projects/<프로젝트>/svg_final/                        ← 브라우저로 �
 
 ---
 
+## 슬라이드 스타일 18종
+
+덱 전체의 **생김새**를 정하는 값입니다. 전략 확인 단계에서 내용에 맞는 3종(무난 → 한 톤 과감 → 개성)을 추천받아 고르지만, 처음부터 `"zine 스타일로 만들어줘"`처럼 지정해도 됩니다.
+
+> **스타일은 색을 정하지 않습니다.** 색은 따로 확인·잠금되고, 스타일은 그 색을 *어떻게 쓰는지*(비율·역할·질감)만 정합니다. 아래 미리보기의 색은 예시일 뿐입니다.
+
+### 기업 · 제품
+
+<table>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/swiss-minimal.svg" width="100%"><br><b><code>swiss-minimal</code></b><br>그리드 고정, 날카로움, 공격적 여백, 무장식<br><sub>하이엔드 컨설팅 · 건축 · 타이포 주도</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/soft-rounded.svg" width="100%"><br><b><code>soft-rounded</code></b><br>둥근 카드, 부드러운 입체, 친근함<br><sub>제품 · SaaS · 교육 · 소비자</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/glassmorphism.svg" width="100%"><br><b><code>glassmorphism</code></b><br>반투명 유리 패널, 그라디언트 광, 부유감<br><sub>모던 SaaS · 핀테크 · 제품 런칭 · AI 데모</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/dark-tech.svg" width="100%"><br><b><code>dark-tech</code></b><br>어두운 캔버스, 글로우 강조, 기하 정밀<br><sub>테크 · AI · 데이터 제품 · 런칭</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/blueprint.svg" width="100%"><br><b><code>blueprint</code></b><br>어두운 도면 위 선화, 등각, 주기(註記)<br><sub>기술 브리핑 · 아키텍처 · 엔지니어링</sub></td>
+<td width="33%"></td>
+</tr>
+</table>
+
+### 편집 · 출판
+
+<table>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/editorial.svg" width="100%"><br><b><code>editorial</code></b><br>매거진 위계, 괘선과 단, 세리프×산세리프<br><sub>금융 · 저널리즘 · 분석 · 해설</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/photo-editorial.svg" width="100%"><br><b><code>photo-editorial</code></b><br>전면 사진이 지배, 텍스트는 포인트와 캡션<br><sub>건축 · 디자인 · 패션 · 문화</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/data-journalism.svg" width="100%"><br><b><code>data-journalism</code></b><br>다단 마이크로 차트, 사이드바, 출처줄, 고밀도<br><sub>금융 · 시장 리뷰 · 리서치 · 데이터 리포트</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/brutalist.svg" width="100%"><br><b><code>brutalist</code></b><br>신문 조판 밀도, 괘선 박스, 날것의 구조<br><sub>연차 리뷰 · 리서치 다이제스트 · 선언문</sub></td>
+<td width="33%"></td>
+<td width="33%"></td>
+</tr>
+</table>
+
+### 표현 · 인쇄
+
+<table>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/memphis.svg" width="100%"><br><b><code>memphis</code></b><br>충돌하는 색 블록, 기하 컨페티, 굵은 외곽선<br><sub>페스티벌 · 소비재 · 영 타깃 · 런칭</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/zine.svg" width="100%"><br><b><code>zine</code></b><br>리소 인쇄 어긋남, 하프톤, 제한 팔레트, 거친 질감<br><sub>문화 · 디자인 토크 · 인디 브랜드</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/vintage-poster.svg" width="100%"><br><b><code>vintage-poster</code></b><br>미드센추리 플랫 블록, 하프톤, 레트로 기하<br><sub>헤리티지 · 호스피탈리티 · 문화 · 기념</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/paper-cut.svg" width="100%"><br><b><code>paper-cut</code></b><br>겹친 종이, 층 사이 부드러운 그림자, 촉각적<br><sub>문화 · 민속 · 어린이 · 축제 · 지속가능성</sub></td>
+<td width="33%"></td>
+<td width="33%"></td>
+</tr>
+</table>
+
+### 손그림 · 브러시
+
+<table>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/sketch-notes.svg" width="100%"><br><b><code>sketch-notes</code></b><br>따뜻한 종이, 두들 선화, 파스텔 블록<br><sub>교육 · 트레이닝 · 온보딩</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/ink-notes.svg" width="100%"><br><b><code>ink-notes</code></b><br>옅은 바탕, 검정 손잉크, 절제된 의미 강조<br><sub>방법론 · 전후 비교 · 선언문</sub></td>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/chalkboard.svg" width="100%"><br><b><code>chalkboard</code></b><br>어두운 슬레이트, 분필 스트로크, 파우더리 파스텔<br><sub>강의 · 튜토리얼 · 교실 · 학술</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/ink-wash.svg" width="100%"><br><b><code>ink-wash</code></b><br>한지 여백, 붓자국, 낙관, 정적<br><sub>문화 · 철학 · 헤리티지 · 신중식</sub></td>
+<td width="33%"></td>
+<td width="33%"></td>
+</tr>
+</table>
+
+### 특수
+
+<table>
+<tr>
+<td width="33%"><img src=".claude/skills/ppt-master/scripts/confirm_ui/static/style_previews/pixel-art.svg" width="100%"><br><b><code>pixel-art</code></b><br>엄격한 픽셀 그리드, 블록 형태, 제한 팔레트<br><sub>게이밍 · 레트로 테크 · 노스탤지어</sub></td>
+<td width="33%"></td>
+<td width="33%"></td>
+</tr>
+</table>
+
+프리셋으로 안 잡히는 미학이면 `custom`으로 산문 설명을 넣을 수 있습니다. 스타일별 상세 규칙(형태·장식 밀도·여백·질감·짝지어지는 이미지 렌더링)은 [`references/visual-styles/`](.claude/skills/ppt-master/references/visual-styles/)에 스타일마다 한 파일씩 있습니다.
+
+---
 ## 설치 (10분)
 
 **1단계 — Python 3.10+**
