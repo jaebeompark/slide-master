@@ -84,6 +84,7 @@ TeamCreate(team_name="visual-review-<project>", agent_type="orchestrator")
 Agent(
   team_name="visual-review-<project>",
   subagent_type="general-purpose",
+  model="sonnet",
   name="orchestrator",
   prompt=<orchestrator-prompt>,
 )
@@ -97,6 +98,7 @@ The orchestrator prompt must be self-contained and is the **single** place where
 - Iteration budget per page (default 1; 2 only for high-stakes / final-cut runs — see [Appendix: Iteration loop](#appendix-iteration-loop-opt-in))
 - Path to the rubric: `.claude/skills/ppt-master/references/visual-review.md`
 - Dispatch contract reference: rubric [§6](../references/visual-review.md#6-dispatch--messaging-contract) (batched parallel spawn, self-contained prompts, mandatory `SendMessage` on idle, anonymous-name tolerance)
+- Batch subagent `model`: `opus` — tiers per [`subagent-delegation.md`](../references/subagent-delegation.md) §3.1
 - Subagent forbid list: do not edit any other page, `design_spec.md`, `spec_lock.md`, `animations.json`, `image_prompts.json`, or `images/`
 
 **Host compatibility**: `TeamCreate` and `SendMessage` are Claude-Code-specific multi-agent primitives. On hosts without those primitives (Cursor, VS Code + Copilot, Codebuddy, etc.) the main agent processes batches sequentially — same partitioning, same per-batch prompts, no parallel dispatch. Token savings from shared fixed inputs still apply; wall-clock time grows roughly N/K-fold.

@@ -196,7 +196,7 @@ The orchestrator partitions the N pages into `ceil(N/K)` batches of ≤ K pages 
 
 - Spawn all batch subagents in **one assistant message** (parallel `Agent` calls). Sequential dispatch breaks pipelining.
 - Each subagent prompt is **self-contained** — no prior conversation context. Inline the absolute paths for §0.1 inputs 1–5 explicitly, plus the full `(svg_path, png_path, page_role)` list for that batch. Do not assume the subagent knows the project root.
-- `subagent_type: general-purpose`. Tool restrictions: Read, Edit, Bash (for `cp` backups), Write (for JSON output). MCP playwright is **not** required by subagents — orchestrator pre-renders PNGs.
+- `subagent_type: general-purpose`, `model: opus` (tier per [`subagent-delegation.md`](./subagent-delegation.md) §3.1). Tool restrictions: Read, Edit, Bash (for `cp` backups), Write (for JSON output). MCP playwright is **not** required by subagents — orchestrator pre-renders PNGs.
 - `name` / `team_name` parameters may be unavailable from nested teammate context. Dispatch must remain functional with anonymous subagents — do not require named addressing.
 
 **Why batched, not per-page**: the rubric (~2.5K tokens), `design_spec.md` (~4–5K), and `spec_lock.md` (~1K) are identical inputs across all pages and do **not** share a prompt cache between sibling subagents. A 20-page deck with per-page dispatch re-reads ~150K tokens of fixed documents; batched dispatch with K=5 cuts that by ~75% while staying inside default parallel-subagent limits (~10). Batches also bound failure blast radius — one crashed subagent loses K pages, not the entire run.

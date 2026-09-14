@@ -43,6 +43,6 @@ When adding or changing a standalone workflow:
 2. Update route selection in [`routing.md`](./routing.md).
 3. Add a short pointer in `SKILL.md` only if the workflow is part of the main pipeline's normal control flow.
 4. Keep detailed commands and recovery behavior in the workflow file, not in this registry.
-5. Decide whether the workflow delegates: if it is independent of upstream conversation context, add its row to [`subagent-delegation.md`](../references/subagent-delegation.md) §1.
+5. Decide whether the workflow delegates: if it is independent of upstream conversation context, add its row to [`subagent-delegation.md`](../references/subagent-delegation.md) §1 and assign its `model` tier in §3.1.
 
 **Forbidden - duplicated matrices**: Do not copy the full route matrix from [`routing.md`](./routing.md) into `SKILL.md`. Link to the authority instead.

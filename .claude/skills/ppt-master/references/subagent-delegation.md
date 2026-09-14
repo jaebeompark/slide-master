@@ -72,30 +72,43 @@ Everything else is a single delegate. Two delegates MUST NOT write the same file
 | Field | Value |
 |---|---|
 | `subagent_type` | `general-purpose` |
-| `model` | Per §3.1 — most rows do not need the session model |
+| `model` | Per §3.1 — always explicit |
 | `description` | 3–5 words naming the step (`Step 5 image acquisition`) |
 
 ### 3.1 Model per delegate
 
-**Rule**: two tiers. Use `sonnet` when the delegate's output is checkable against a fixed rule or a number. Leave `model` unset when the delegate must judge a rendered image or weigh sources against each other. A wrong call in the first group surfaces as a failed check; in the second it surfaces as a deck that looks fine and is wrong.
+**Hard rule**: every dispatch sets `model` explicitly. An unset `model` silently inherits the session model, which is usually the most expensive tier.
+
+**Tier test** — ask two questions per delegate: how complex is the judgment, and what happens when it misses.
+
+| Tier | Assign when |
+|---|---|
+| `sonnet` | The output is checkable against a fixed rule, a number, or an enumerated check list, **and** a miss is re-caught by a later gate or by the main agent accepting the result |
+| `opus` | **Any** of: weighs or synthesizes sources with no fixed answer; judges visual quality or spots defects in rendered pixels; writes a file that ships (`svg_output/`); is the last gate before delivery, so a miss ships |
 
 > Note: `sonnet` is the floor by standing preference — do not lower a row to `haiku` for the mechanical checks even though they would likely survive it.
 
 | Delegate | `model` |
 |---|---|
-| Step 3 template preflight | `sonnet` — fixed structural contract, one verdict per page |
-| template-fill 7.1 read-back | `sonnet` — eight fixed checks against extracted text |
 | Step 2 source digest | `sonnet` — extraction and indexing; §1 already bars the digest from carrying literal values, which bounds the cost of a miss |
-| Step 4 §VII viz matching | `sonnet` — every named key must grep in `charts_index.json` and every quote must match verbatim, so the whole output is checkable |
-| Step 4 §VIII layout matching | `sonnet` — every `#id` and its name string must match `image-layout-patterns.md` verbatim |
+| Step 3 template preflight | `sonnet` — fixed structural contract, one verdict per page |
+| Step 4 §VII viz matching | `sonnet` — every named key must grep in `charts_index.json` and every quote must match verbatim; the main agent accepts the matches |
+| Step 4 §VIII layout matching | `sonnet` — every `#id` and its name string must match `image-layout-patterns.md` verbatim; the main agent accepts the assignments |
 | Step 5 image acquisition | `sonnet` — procedural ladder plus status bookkeeping |
-| `verify-charts` | `sonnet` — numeric diff against calculator output |
-| template-fill 7.2 triage | `sonnet` — classification against the §7.2 finding table |
-| `topic-research` gather / compose | unset — source criticism and synthesis |
-| Step 7 deck verification | unset — reading a render for overflow and font substitution is visual judgment |
-| template-fill 7.3 render check | unset — same |
-| `verify-pptx-export` | unset — same |
-| `visual-review` | unset — that workflow's own contract |
+| `verify-charts` | `sonnet` — numeric diff against calculator output; Step 7 still runs after it |
+| template-fill 7.1 read-back | `sonnet` — eight fixed checks against extracted text |
+| template-fill 7.2 triage | `sonnet` — classification against the §7.2 finding table; 7.3 re-catches render-level misses |
+| `topic-research` fan-out gather (one facet) | `sonnet` — fact and URL collection; the composer weighs it |
+| `topic-research` single delegate / composer | `opus` — source criticism and synthesis; the document is the deck's only factual base |
+| Step 7 deck verification | `opus` — the only check that sees converted pixels, read from a reduced-resolution contact sheet, last gate before delivery |
+| template-fill 7.3 render check | `opus` — the render gate of that route; a missed defect ships |
+| `verify-pptx-export` | `opus` — separates engine artifacts from real defects and proposes repairs |
+| `visual-review` orchestrator | `sonnet` — partitioning, dispatch, and table aggregation |
+| `visual-review` batch | `opus` — rhythm / alignment / emphasis judgment plus atomic edits to `svg_output/` |
+
+**Escalation — one tier up, once**: when a `sonnet` delegate returns `failed` for a non-environment reason, or the main agent finds its artifact wrong (a quote that does not match, a defect a later gate caught that the delegate should have), re-dispatch that row at `opus` with the finding inlined. When the same row escalates in two runs, change its table entry.
+
+> Note: main-agent work in §2 — the Strategist stage, Step 6 SVG authoring, route selection, every fix decision — has no `model` field. It runs on the session model the user chose; the skill never switches it.
 
 The prompt MUST inline all of:
 
