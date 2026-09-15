@@ -18,7 +18,7 @@ route families. The main SVG family uses Strategist → Image_Generator → Exec
 to convert source documents into editable DrawingML. Direct-PPTX routes preserve
 an existing PowerPoint package and use their own execution gates.
 
-**Main SVG Pipeline**: `Source Document → Create Project → [Template] → Strategist confirmation stage → [Image_Generator] → Executor Live Preview → Quality Check → Post-processing → Export PPTX`
+**Main SVG Pipeline**: `Source Document → Create Project → [Template] → Strategist confirmation stage → [Image_Generator] → Executor Live Preview → Quality Check → User Export Confirmation → Post-processing → Export PPTX`
 
 **Route selection authority**:
 [`.claude/skills/ppt-master/workflows/routing.md`](.claude/skills/ppt-master/workflows/routing.md)

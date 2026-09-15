@@ -137,7 +137,7 @@ For each row in the table:
 
 If `brand_review.json` is non-empty, that's a single decision applied across the deck (e.g., bump footer text color from `#6E7681` to `#8B949E` — one change, every page benefits). Do this once, then optionally re-run visual-review for the affected pages only.
 
-After the table is clean, continue to post-processing per [`SKILL.md`](../SKILL.md) Step 7:
+After the table is clean, return to [`SKILL.md`](../SKILL.md) Step 6 and stop at the export-confirmation gate. Step 7 runs only after the user explicitly confirms export:
 
 ```bash
 python3 .claude/skills/ppt-master/scripts/total_md_split.py <project_path>  # only when notes were requested

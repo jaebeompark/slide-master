@@ -70,9 +70,11 @@ following Codex enforcement remains mandatory for that route only:
   AI path uses Codex built-in `image_gen`; legacy `host-native` reads as `auto`.
   On acquisition failure, retry once, mark `Needs-Manual`, report, and continue
   without substitution.
-- Post-process in separate ordered calls: `total_md_split.py` only when notes
-  were requested, `finalize_svg.py` only when a self-contained SVG preview is
-  requested or a workflow explicitly needs `svg_final/`, then `svg_to_pptx.py`.
+- Post-process in separate ordered calls, and only after the user has
+  explicitly confirmed export (Step 6 completion alone does not trigger this —
+  stop and ask first): `total_md_split.py` only when notes were requested,
+  `finalize_svg.py` only when a self-contained SVG preview is requested or a
+  workflow explicitly needs `svg_final/`, then `svg_to_pptx.py`.
   Never replace finalize with a copy or use `-s final` for release. Require
   `verify_deck.py <project>` exit 0 before declaring completion, then Read the
   `_pptx_render/<stem>-grid.png` contact sheet it renders as a single sanity

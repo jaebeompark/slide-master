@@ -70,8 +70,9 @@
 - Once on the whole project at the end (full run, no `--pages`) — this sweep owns the deck-wide contract checks.
 - Fix every `error`. Disposition each `text geometry:` warning (fix, or state the intended balanced break). Clean block = silent pass.
 
-## 9. Then export (SKILL.md Step 7 owns it)
-- No notes → skip 7.1. finalize (7.2) deferred by default. Export: `python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project>`. Verify: `verify_deck.py <project>` + `unzip -t`, then read the `_pptx_render/<stem>-grid.png` contact sheet it renders. If it is suspicious, recommend `verify-pptx-export` and wait for explicit approval; never auto-run it. Add `--no-render` only while iterating; the final run renders.
+## 9. Stop for export confirmation, then export (SKILL.md Step 7 owns it)
+- Quality gates clean → report readiness and wait for the user's explicit confirmation ("export" / "내보내기" / "导出"). Do NOT run Step 7 automatically.
+- Once confirmed: no notes → skip 7.1. finalize (7.2) deferred by default. Export: `python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project>`. Verify: `verify_deck.py <project>` + `unzip -t`, then read the `_pptx_render/<stem>-grid.png` contact sheet it renders. If it is suspicious, recommend `verify-pptx-export` and wait for explicit approval; never auto-run it. Add `--no-render` only while iterating; the final run renders.
 
 ---
 

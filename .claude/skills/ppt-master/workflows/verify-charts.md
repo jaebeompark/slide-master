@@ -258,7 +258,7 @@ verify-charts: 19_flow.svg | type=sankey | mode=manual-verify | link widths cons
 
 ## After verification
 
-Continue with post-processing & export ([SKILL.md Step 7](../SKILL.md)):
+Return to [SKILL.md](../SKILL.md) Step 6 — report chart verification complete and stop at the export-confirmation gate. Step 7 runs only after the user explicitly confirms export:
 
 ```bash
 python3 .claude/skills/ppt-master/scripts/total_md_split.py <project_path>  # only when notes were requested

@@ -1,17 +1,17 @@
 ---
-description: Start the browser SVG editor when it is not running, and apply submitted annotations after Step 7 export
+description: Start the browser SVG editor when it is not running, and apply submitted annotations after Step 6 generation completes
 ---
 
 # Live Preview Workflow
 
-> **Purpose**: (1) start/reopen the browser SVG editor when no preview service is currently running, and (2) apply user-submitted annotations after Step 7 export completes.
+> **Purpose**: (1) start/reopen the browser SVG editor when no preview service is currently running, and (2) apply user-submitted annotations once Step 6 generation completes — export itself stays a separate, user-confirmed step.
 >
 > **Not in scope**: Executor's mandatory auto-startup — that lives in [`SKILL.md`](../SKILL.md) Step 6. Do not re-launch a preview that is already running.
 
 ## When to Run
 
 - **Start (Step 1)** — preview service is not currently running and the user wants to look at the deck or click an element. Typical cases: post-export re-entry in a fresh chat, or the user clicked **Exit preview** earlier and now wants it back.
-- **Apply annotations (Step 2)** — Step 7 has produced at least one PPTX, and the user signals that submitted annotations should now be applied. Triggers include:
+- **Apply annotations (Step 2)** — Step 6 has completed (SVGs generated and quality-checked; export need not have happened yet), and the user signals that submitted annotations should now be applied. Triggers include:
   - quoting the browser prompt (`Changes saved to svg_output...` / `修改已保存到 svg_output...`)
   - saying `apply my annotations` / `apply my edits` / `应用注解` / `开始应用` / 等价表达
 
@@ -20,7 +20,7 @@ description: Start the browser SVG editor when it is not running, and apply subm
 - The preview service is already running → just give the user the URL; do not restart.
 - The user gave a precise chat edit ("change page 3 title to X") → edit the SVG directly.
 - The user wants a full regeneration → use the main workflow.
-- Step 7 has never run for this project → annotations cannot be applied yet; finish the main pipeline first.
+- Step 6 has never completed for this project (no quality-checked `svg_output/` pages) → annotations cannot be applied yet; finish SVG generation first.
 
 ---
 
@@ -47,7 +47,7 @@ Do not wait for confirmation before launching — the user already asked for pre
 
 ## Step 2: Apply submitted annotations
 
-🚧 **GATE**: `<project_path>/exports/` contains at least one `*.pptx` (Step 7 has completed). If not, do not apply annotations — tell the user to finish the main pipeline first.
+🚧 **GATE**: `<project_path>/svg_output/` holds generated SVG pages and the Step 6 quality gate has passed (Step 6 complete). Export does not need to have happened yet. If Step 6 is not complete, do not apply annotations — tell the user to finish SVG generation first.
 
 Triggered by the user signals listed in "When to Run".
 
@@ -61,12 +61,16 @@ Triggered by the user signals listed in "When to Run".
    - Edit the targeted element in `<project_path>/svg_output/<file>` per the annotation text.
    - Remove `data-edit-target` and `data-edit-annotation` from that element.
    - Append one `annotation_applied` JSONL record to `<project_path>/live_preview/annotations.jsonl` with `ts`, `file`, `element_id`, and the original annotation text.
-4. Re-export:
+4. Re-check, then ask before exporting:
+   ```bash
+   python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>  # or --pages <edited-page-tokens> to scope the check to just-applied pages
+   ```
+   Fix any error the same way Step 6 does. Once clean, report readiness and ask the user whether to export now — do NOT run `svg_to_pptx.py` automatically. An explicit "export" / "내보내기" / "重新导出" reply (or an apply request that already asked for export) is the confirmation:
    ```bash
    python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>  # only when svg_final/ is requested or already exists
    python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
    ```
-5. Tell the user (in their language): annotations applied, new PPTX exported, preview is still running. If the browser still shows the old slide, refresh or reselect the page.
+5. Tell the user (in their language): annotations applied and re-checked; export is ready whenever they confirm. Once they confirm and Step 7.3 completes, tell them the new PPTX is exported. Preview is still running — if the browser still shows the old slide, refresh or reselect the page.
 6. Loop: more annotations submitted → repeat from step 1. User signals done or "stop preview" → end.
 
 ---

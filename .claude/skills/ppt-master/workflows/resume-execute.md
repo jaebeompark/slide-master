@@ -1,10 +1,10 @@
 ---
-description: Execution-session entry — resume PPT execution in a fresh chat after the planning session (SKILL.md Step 1-5) completed in a previous chat. Reads project state from disk and runs Step 6 + Step 7 with no prior-chat context carry-over.
+description: Execution-session entry — resume PPT execution in a fresh chat after the planning session (SKILL.md Step 1-5) completed in a previous chat. Reads project state from disk and runs Step 6, then stops for the export-confirmation gate before Step 7, with no prior-chat context carry-over.
 ---
 
 # Resume Execute Workflow
 
-> Standalone execution-session entry. Run when the planning session (SKILL.md Step 1–5) completed in a previous chat and the user wants to continue with SVG generation + export. Loads project state from disk and runs Step 6 + Step 7 in a clean session.
+> Standalone execution-session entry. Run when the planning session (SKILL.md Step 1–5) completed in a previous chat and the user wants to continue with SVG generation + export. Loads project state from disk and runs Step 6 in a clean session, then stops at the export-confirmation gate; Step 7 runs only after the user confirms.
 
 This workflow is **independent**: it owns the execution session starting from a fresh chat — no upstream conversation context required. By isolating SVG generation in its own session, the model gains 20–40K context headroom by not carrying the planning session's Strategist confirmation dialogue, image search/fetch results, or Strategist references.
 
@@ -51,7 +51,8 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 - Milestone `spec_lock` re-read (P01/P05/P09, …, plus after context compaction) + sequential page generation
 - Quality Check Gate
 - Speaker notes generation (only when requested in `design_spec.md §X`)
-- Step 7: Post-processing & Export (`total_md_split` when notes exist → `finalize_svg` only when a self-contained SVG preview is requested or already exists → `svg_to_pptx`)
+- Stop at the export-confirmation gate: report readiness, keep the live preview open, and wait for the user's explicit confirmation (e.g. "export" / "내보내기" / "导出")
+- Step 7: Post-processing & Export, only after that confirmation (`total_md_split` when notes exist → `finalize_svg` only when a self-contained SVG preview is requested or already exists → `svg_to_pptx`)
 
 The fresh session pays the cost of re-reading references (~14K tokens) but earns back substantially more headroom by dropping the planning session's accumulated context. Net win in both window pressure and reasoning budget per page.
 
@@ -63,6 +64,6 @@ The fresh session pays the cost of re-reading references (~14K tokens) but earns
 
 ## Step 3: Hand-back
 
-When Step 7 completes and `exports/<title>_ver<N>.pptx` is produced, the workflow ends. Report the export path to the user.
+If the user has not yet confirmed export by the time Step 6 (and any applicable conditional gates) finish, stop there and report export readiness in the same session — the workflow does not end until the user either confirms export or explicitly defers it. Once Step 7 completes and produces `exports/<title>_ver<N>.pptx`, the workflow ends; report the export path to the user.
 
 If the deck contains data charts, the [`verify-charts`](verify-charts.md) workflow runs between Step 6 and Step 7 as documented in SKILL.md — resume mode handles it the same way the continuous mode does.
