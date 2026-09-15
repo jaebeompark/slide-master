@@ -23,7 +23,7 @@ enhancement do not load or inherit this file.
 
 > AI-driven multi-format SVG content generation system. Converts source documents into high-quality SVG pages through multi-role collaboration and exports to PPTX.
 
-**Main SVG Pipeline**: `Source Document → Create Project → [Template] → Strategist Structured Plan → [Image_Generator] → Executor Live Preview → Quality Check → Post-processing → Export`
+**Main SVG Pipeline**: `Source Document → Create Project → [Template] → Strategist Structured Plan → [Image_Generator] → Executor Live Preview → Quality Check → User Export Confirmation → Post-processing → Export`
 
 ### SVG Page-Design Boundary
 
@@ -45,7 +45,7 @@ enhancement do not load or inherit this file.
 >
 > 1. **SERIAL EXECUTION** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue"
 > 2. **BLOCKING = HARD STOP** — Steps marked ⛔ BLOCKING require a full stop; the AI MUST wait for an explicit user response before proceeding and MUST NOT make any decisions on behalf of the user
-> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Strategist confirmation stage in Step 4 is ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
+> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Strategist confirmation stage in Step 4 is ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, and speaker notes — may proceed automatically without further user confirmation. Step 7 export is a separate ⛔ BLOCKING gate: the AI MUST stop after Step 6, report export readiness, and wait for the user's explicit confirmation before running Step 7)
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN. This rule scopes page authoring only; the context-heavy side work listed in [`references/subagent-delegation.md`](references/subagent-delegation.md) §1 is delegated by default
@@ -679,7 +679,7 @@ Read .claude/skills/diagram-design/SKILL.md       # CONDITIONAL: deck has struct
 
 **Design Parameter Confirmation (Mandatory)**: before the first SVG, output key design parameters from the spec (canvas dimensions, color scheme, font plan, body font size). See executor-base.md §2.
 
-**Live Preview Auto-Startup (Mandatory)**: before the first SVG, automatically start the browser editor in live mode and keep it running continuously through Executor + Step 7 export:
+**Live Preview Auto-Startup (Mandatory)**: before the first SVG, automatically start the browser editor in live mode and keep it running continuously through Executor, the user's post-Step-6 review, and export once the user confirms it:
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live --daemon
 ```
@@ -687,7 +687,7 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live --daemon
 - Treat the launch URL as a checkpoint value: before writing the first SVG, either report the actual URL from the launcher or state the launch failure explicitly. Do not silently continue while claiming preview is available.
 - Run it as a long-running side process/session; do not wait for it to exit before generating SVG pages. Do not wait for user confirmation after startup.
 - **Service must keep running** until one of: (a) the user clicks **Exit preview** in the browser, or (b) the user explicitly asks in chat to stop it. Generation continues even if the user closes the editor.
-- **Do NOT read or apply submitted annotations during generation.** Users may annotate at any time, but Executor proceeds without touching them. The window to apply annotations opens only after Step 7 completes — see [`workflows/live-preview.md`](workflows/live-preview.md).
+- **Do NOT read or apply submitted annotations during generation.** Users may annotate at any time, but Executor proceeds without touching them. The window to apply annotations opens once Step 6 finishes (SVGs generated and quality-checked); export confirmation is a separate, later gate — see [`workflows/live-preview.md`](workflows/live-preview.md).
 - The editor also supports **staged direct edits** (text content + SVG element attributes previewed immediately, then written to `svg_output/` only when the user clicks **Apply changes**; `Ctrl+Z` / Undo drops staged edits) alongside annotation; re-export stays chat-driven. Full scope and editor details: see [`workflows/live-preview.md`](workflows/live-preview.md) Notes.
 
 **Pre-generation Batch Read (Mandatory)**: before the first SVG, batch-read every distinct layout SVG referenced in `spec_lock.page_layouts` and every distinct chart SVG referenced in `spec_lock.page_charts` (plus any §VII backup charts). One read per file, up front — do not re-read these during page generation. See executor-base.md §1.0.
@@ -738,7 +738,7 @@ The Step 6 live-preview server is already running — pass its actual URL from t
 
 **Logic Construction Phase (opt-in)**: only when the user requested speaker notes / narration (recorded in `design_spec.md §X`), generate speaker notes → `<project_path>/notes/total.md`. **Default — no request → skip this phase entirely**: write no `notes/` files; Step 7.1 is skipped and export simply embeds no notes. A later narration/audio request generates notes on demand via [`generate-audio`](workflows/generate-audio.md).
 
-**✅ Checkpoint — Confirm all SVGs (and notes, when requested) are fully generated and quality-checked. Run the applicable conditional gates below, then proceed to Step 7**:
+**✅ Checkpoint — Confirm all SVGs (and notes, when requested) are fully generated and quality-checked. Run the applicable conditional gates below, then stop at the export-confirmation gate**:
 ```markdown
 ## ✅ Executor Phase Complete
 - [x] Live preview started before the first SVG and kept available at the reported URL
@@ -756,11 +756,13 @@ The Step 6 live-preview server is already running — pass its actual URL from t
 
 > **Visual self-check (opt-in)?** If the user explicitly asked for a per-page visual re-pass on the SVGs ("跑一下视觉自检 / 视觉回看", "visual review", "check pages visually", etc.), run the standalone [`visual-review`](workflows/visual-review.md) workflow before Step 7. Do NOT run it by default and do NOT recommend it based on inferred model capability or deck size — trigger is user request only.
 
+⛔ **BLOCKING — Export confirmation**: once the checkpoint above and the applicable conditional gates are satisfied, the deck is ready for export, but Step 7 does NOT start automatically. Report readiness to the user (live preview stays open at its reported URL for continued review/annotation) and ask whether to export now. Wait for an explicit confirmation — a plain "export" / "내보내기" / "导出" instruction also satisfies this gate. A "not yet" answer, or live-preview annotations the user still wants applied first, keeps the deck in review; re-ask only once the user signals readiness.
+
 ---
 
 ### Step 7: Post-processing & Export
 
-🚧 **GATE**: Step 6 complete; all SVGs generated to `svg_output/`; speaker notes `notes/total.md` generated when the user requested them (default no-notes path has no `notes/` and satisfies this gate).
+🚧 **GATE**: Step 6 complete; all SVGs generated to `svg_output/`; speaker notes `notes/total.md` generated when the user requested them (default no-notes path has no `notes/` and satisfies this gate); and the user has explicitly confirmed export (see the export-confirmation gate above — a plain "export" / "내보내기" / "导出" instruction also satisfies this).
 
 🚧 **Image readiness GATE** (when Step 5 left ai rows in `Needs-Manual`): every expected file must exist at `project/images/<filename>` before running 7.1.
 
@@ -996,7 +998,7 @@ python3 ${SKILL_DIR}/scripts/verify_deck.py <project_path>
 - Visible or reported suspicion, or no usable exported-PPTX render: identify the page/finding and recommend [`verify-pptx-export`](workflows/verify-pptx-export.md) to the user. **Do not auto-enter that workflow or start its iterative repair loop.** Run it only after explicit user approval.
 - This one-pass check does not change the standalone workflow's explicit-request-only boundary.
 
-> **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Changes saved to svg_output...` / `修改已保存到 svg_output...`), say "apply my annotations" / "应用注解" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
+> **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Changes saved to svg_output...` / `修改已保存到 svg_output...`), say "apply my annotations" / "应用注解" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply the edits and re-check. Re-export is not automatic there either: Step 2 asks the user whether to export, and only an explicit confirmation (or an apply request that already said "and export") runs Step 7.3. Annotations submitted during generation are also handled here, not earlier.
 
 > **Direct edits in the browser**: the user may also stage text / SVG attribute edits in the preview. These land in `svg_output/` only after the user clicks **Apply changes**. If they ask to "re-export" / "重新导出" after applying such edits, just re-run Step 7.2–7.3 (finalize + export); no annotation-application step is needed unless they also saved AI-needed annotations.
 

@@ -27,7 +27,7 @@ Central recovery rules for common PPT Master failures. Route-specific workflow f
 | User replaces/adds images after analysis | No | Re-run `analyze_images.py` before reading image facts | No | Step 4/5/6 image-fact read |
 | Live preview fails to start | No | Continue generation; report that preview is unavailable | Only if user requires browser preview | Step 6 or `live-preview` Step 1 |
 | Live preview closed by user | No | Continue generation | No | Restart through `live-preview` only if requested |
-| Browser annotations submitted during generation | No | Defer application until after Step 7 | User asks to apply annotations | `live-preview` Step 2 |
+| Browser annotations submitted during generation | No | Defer application until Step 6 completes (SVGs generated and quality-checked) | User asks to apply annotations | `live-preview` Step 2 |
 | `svg_quality_checker.py` error | Yes | Fix the affected SVG, then rerun checker | No unless required asset is missing | Step 6 Visual Construction |
 | `svg_quality_checker.py` warning | No | Fix when straightforward; otherwise acknowledge residual risk (text-geometry warnings: disposition each — fix or stated intent) | No | Step 6 warning handling |
 | Suspected post-export visual defect (lightweight contact sheet / user review) | No | Report the suspect page/finding and recommend `verify-pptx-export`; do not auto-run its deep scan or repair loop | Explicit approval enters `verify-pptx-export`; confirmed defects are then fixed in the owning source | `verify-pptx-export` after approval |
@@ -65,7 +65,8 @@ Central recovery rules for common PPT Master failures. Route-specific workflow f
 | Images acquired but SVGs not started | `SKILL.md` Step 6 |
 | Background acquisition launched, spec complete, statuses unread | `SKILL.md` Step 5 collection point |
 | SVGs complete and checker passed, requested notes missing | Step 6 Logic Construction |
-| SVGs complete (and notes complete when requested) | Step 7.1 (skip when no notes) |
+| SVGs complete (and notes complete when requested), export not yet confirmed | Report export readiness and wait for the user's explicit confirmation (SKILL.md Step 6 export-confirmation gate) |
+| User confirmed export | Step 7.1 (skip when no notes) |
 | Step 7.1 complete, export not complete | Step 7.2 |
 | Step 7.2 complete, PPTX not complete | Step 7.3 |
 | Browser annotations saved after export | [`live-preview`](./live-preview.md) Step 2 |

@@ -504,4 +504,4 @@ Moved to [`speaker-notes.md`](./speaker-notes.md). Trigger: `design_spec.md §X`
 
 ## 9. Next Steps After Completion
 
-After Visual Construction (and Logic Construction when notes were requested) completes, proceed directly to post-processing and export. [`SKILL.md` Step 7](../SKILL.md) owns the canonical command sequence, defaults, and outputs; do not improvise flags from memory.
+After Visual Construction (and Logic Construction when notes were requested) completes, run the Quality Check Gate and any applicable conditional gates, then stop at the export-confirmation gate — report readiness and wait for the user's explicit confirmation before Step 7. [`SKILL.md` Step 7](../SKILL.md) owns the canonical command sequence, defaults, and outputs; do not improvise flags from memory.
