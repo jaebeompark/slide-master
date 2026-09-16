@@ -1546,6 +1546,133 @@ class SVGQualityChecker:
             )
 
         self._check_unmergeable_leading_text(root, result)
+        self._check_line_per_text_blocks(root, result)
+
+    def _check_line_per_text_blocks(self, root: ET.Element, result: Dict) -> None:
+        """Warn when consecutive <text> elements are really the lines of one block.
+
+        A multi-line block must ship as one <text> with sibling <tspan> lines. Authoring
+        one <text> per visual line exports as a stack of separate single-line frames that
+        the user cannot reflow when editing.
+
+        Two lines are enough to flag: a width-driven split is usually exactly two. False
+        positives are held off by _is_exempt (code panels, table cells, short labels, list
+        items) and _continues (the previous line must end on a dangling particle or
+        connective ending, i.e. it is grammatically unfinished).
+        """
+        def _num(value):
+            if value is None:
+                return None
+            try:
+                return float(re.match(r'^\s*([+-]?(?:\d+\.?\d*|\d*\.\d+))', value).group(1))
+            except (AttributeError, ValueError):
+                return None
+
+        list_marker = re.compile(
+            r'^\s*(?:[\u2460-\u2473]|[\u2022\u00b7\u25cf\u25cb\u25aa\u2013\u2014-]\s|'
+            r'\[\d+\]|\(?\d+[.)]\s|\d+\s+\S)'
+        )
+
+        def _is_exempt(elem) -> bool:
+            # Code panels and table cells legitimately carry one <text> per line.
+            family = (elem.get('font-family') or '').lower()
+            if 'mono' in family or 'consolas' in family or 'courier' in family:
+                return True
+            if (elem.get('xml:space') or elem.get('{http://www.w3.org/XML/1998/namespace}space')) == 'preserve':
+                return True
+            text = (elem.text or '').strip()
+            # Short labels are their own blocks, not wrapped lines.
+            if len(text) < 12:
+                return True
+            # A numbered/bulleted line is a list item, not a wrapped continuation.
+            return bool(list_marker.match(text))
+
+        # A Korean line that ends on a particle / connective ending is unfinished:
+        # it only reads as text because the next <text> continues it.
+        unfinished_tail = re.compile(
+            r'(?:'
+            r'[\u00b7,\uff0c+]'                      # trailing middle dot / comma / plus
+            r'|(?:\uc740|\ub294|\uc774|\uac00|\uc744|\ub97c|\uc640|\uacfc|\uc758|\uc5d0|\uc5d0\uc11c'
+            r'|\ub85c|\uc73c\ub85c|\ubd80\ud130|\uae4c\uc9c0|\ubcf4\ub2e4|\ub300\uc2e0|\ucc98\ub7fc)'
+            r'|(?:\uace0|\uba70|\uc11c|\uc9c0\ub9cc|\uc73c\uba74|\uba74|\ub824\uba74|\uc5b4|\uc544|\uc9c0)'
+            r')\s*$'
+        )
+
+        def _continues(prev_el, next_el) -> bool:
+            """True when prev is grammatically unfinished and next continues it."""
+            prev_text = (prev_el.text or '').strip()
+            next_text = (next_el.text or '').strip()
+            if not prev_text or not next_text:
+                return False
+            if list_marker.match(next_text):
+                return False
+            # A finished sentence or a trailing colon ends the block.
+            if prev_text[-1] in '.!?:;\u3002\uff01\uff1f':
+                return False
+            # Otherwise only a dangling particle / connective means the line runs on.
+            return bool(unfinished_tail.search(prev_text))
+
+        stacks = []
+        for parent in root.iter():
+            if parent.get('data-pptx-native') in {'table', 'chart'}:
+                continue
+            runs = []
+            for child in list(parent):
+                if _local_name(child).lower() != 'text':
+                    if len(runs) > 0:
+                        runs.append(None)
+                    continue
+                if list(child) or _is_exempt(child):
+                    runs.append(None)
+                    continue
+                if not (child.text or '').strip():
+                    runs.append(None)
+                    continue
+                runs.append(child)
+
+            current = []
+            for item in runs + [None]:
+                if item is None:
+                    if len(current) >= 2:
+                        stacks.append(current[:])
+                    current = []
+                    continue
+                if not current:
+                    current = [item]
+                    continue
+                prev = current[-1]
+                x0, x1 = _num(prev.get('x')), _num(item.get('x'))
+                y0, y1 = _num(prev.get('y')), _num(item.get('y'))
+                fs0, fs1 = _num(prev.get('font-size')), _num(item.get('font-size'))
+                same_x = x0 is not None and x1 is not None and abs(x0 - x1) <= 0.6
+                same_fs = (fs0 or 0) == (fs1 or 0)
+                step = None if (y0 is None or y1 is None) else y1 - y0
+                regular = step is not None and 0 < step <= (fs1 or 24) * 2.4
+                if same_x and same_fs and regular and _continues(prev, item):
+                    if len(current) >= 2:
+                        prev_step = _num(current[-1].get('y')) - _num(current[-2].get('y'))
+                        if abs(prev_step - step) > 1.5:
+                            if len(current) >= 2:
+                                stacks.append(current[:])
+                            current = [prev, item]
+                            continue
+                    current.append(item)
+                else:
+                    if len(current) >= 2:
+                        stacks.append(current[:])
+                    current = [item]
+
+        if stacks:
+            samples = []
+            for stack in stacks[:3]:
+                head = (stack[0].text or '').strip()[:22]
+                samples.append(f'{len(stack)} lines at x={stack[0].get("x")} ("{head}…")')
+            suffix = '' if len(stacks) <= 3 else f'; +{len(stacks) - 3} more'
+            result['warnings'].append(
+                'Detected line-per-<text> block(s) — a multi-line block must be one '
+                '<text> with sibling <tspan> lines, not one <text> per visual line '
+                f'({"; ".join(samples)}{suffix})'
+            )
 
     def _check_unmergeable_leading_text(self, root: ET.Element, result: Dict) -> None:
         """Warn when leading text cannot be normalized for paragraph merging."""

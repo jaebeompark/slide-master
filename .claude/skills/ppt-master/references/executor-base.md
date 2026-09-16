@@ -98,15 +98,29 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 - **Prose render recipe**: one `<text>` per paragraph; wrap lines with sibling `<tspan>` where the first line uses `dy="0"` and every subsequent line repeats the parent `<text>`'s **exact `x`** and the **same positive relative `dy`** (the line-height). Equal relative `dy` + matching `x` + the same effective `font-size` lets lines flow inside one PowerPoint paragraph; a font-size change preserves a new paragraph inside the same text frame, while a growing/cumulative `dy`, an irregular gap, or a mismatched `x` (e.g. `x="0"` under `<text x="60">`) may split them into separate single-line boxes. Set the line-height `dy` from the font size × a line-height factor. **Default — line-height by density (may override per content fit)**: ~1.4–1.5× for dense / small-body blocks (CLReq comfortable minimum), 1.6–2.0× for large-type, sparse, or `breathing` blocks. Fit about width ÷ font-size CJK glyphs per line (Latin fits roughly twice that); the last line runs short. Use the body ramp size, not a new one.
 
+**Hard rule — one text block = one `<text>`**: ship a multi-line block as a single
+`<text>` with sibling `<tspan>` lines. Never emit one `<text>` per visual line. Applies to
+every block — lead, core message, card body, callout, table cell prose, caption. Genuinely
+separate items (list rows, table cells, field names, short labels, code lines) stay
+separate `<text>`. On a `line-per-<text> block(s)` warning from `svg_quality_checker.py`,
+merge the lines into one `<text>` with `<tspan>` children — never reword to dodge it.
+
+> Note: line-per-`<text>` exports as a stack of single-line frames — the reader cannot
+> reflow the block when editing, and the page carries N frames where it should carry one.
+> The gate pairs consecutive single-line `<text>` that share `x` and font-size, step by a
+> regular `dy`, and whose earlier line ends unfinished (dangling particle, connective
+> ending, comma, or middle dot).
+
 > **Note — an authored break is not a reflowable one.** The flow-in-one-paragraph
 > behavior above is what you want for prose the reader may edit. It is a defect for a
 > break you computed to fit a column: the merged paragraph carries both lines' text but
 > the exported frame is sized to the widest single line, so PowerPoint re-wraps it — and
 > CJK has no spaces to break on, so it splits mid-word. When a page's breaks were chosen
-> by width arithmetic rather than left to reflow, export that deck with `--no-merge`
-> ([SKILL.md](../SKILL.md) Step 7.3) or author each line as its own `<text>`. Audit for it
-> by comparing each exported paragraph's estimated width against its frame `<a:ext cx>`;
-> `svg_quality_checker.py` cannot see this because the SVG itself is correct.
+> by width arithmetic rather than left to reflow, **keep the single `<text>` and export
+> that deck with `--no-merge`** ([SKILL.md](../SKILL.md) Step 7.3) — the export flag is
+> the fix, not splitting the block in the SVG. Audit for it by comparing each exported
+> paragraph's estimated width against its frame `<a:ext cx>`; `svg_quality_checker.py`
+> cannot see this because the SVG itself is correct.
 - **Template precedence**: when an inherited template slot is a bullet list but the §IX block is prose, the prose wins — widen or reflow the container to hold the paragraph, or drop that card; do not pour the sentence back into the list slot.
 - **Mode precedence**: the locked mode shapes voice / register, not §IX's authored titles or page order. When a `§IX` title is a user-authored topic label, keep it — do not upgrade it to an assertion just because the mode (e.g. `pyramid`) favors them; mode title-tendencies apply only to AI-drafted titles.
 
